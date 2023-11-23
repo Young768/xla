@@ -1,7 +1,7 @@
 # copybara:uncomment_begin(google-only-loads)
-# load("//xla/tests:build_defs.bzl", "xla_test")
-# load("@local_config_cuda//cuda:build_defs.bzl", "cuda_library")
-# load("@tsl//tsl/platform/default:cuda_build_defs.bzl", "if_cuda_is_configured")
+load("//xla/tests:build_defs.bzl", "xla_test")
+load("@local_config_cuda//cuda:build_defs.bzl", "cuda_library")
+load("@tsl//tsl/platform/default:cuda_build_defs.bzl", "if_cuda_is_configured")
 # copybara:uncomment_end(google-only-loads)
 
 package(
@@ -64,85 +64,85 @@ cc_library(
 cc_library(
     name = "custom_fusion_library",
     # copybara:uncomment_begin(google-only)
-    # deps = [":cutlass_gemm_fusion"],
+    deps = [":cutlass_gemm_fusion"],
     # copybara:uncomment_end(google-only)
 )
 
 # copybara:uncomment_begin(google-only)
 # # TODO(ezhulenev): We currently do not have a CUTLASS dependency in open source BUILD.
 #
-# cc_library(
-#     name = "cutlass_gemm_fusion",
-#     srcs = ["cutlass_gemm_fusion.cc"],
-#     hdrs = ["cutlass_gemm_fusion.h"],
-#     deps = [
-#         ":custom_fusion",
-#         ":custom_fusion_pattern",
-#         ":custom_kernel",
-#         ":cutlass_gemm_kernel",
-#         "@com_google_absl//absl/status",
-#         "//xla:shape_util",
-#         "//xla:status",
-#         "//xla:statusor",
-#         "//xla:xla_data_proto_cc",
-#         "//xla/hlo/ir:hlo",
-#         "//xla/service:pattern_matcher",
-#         "@tsl//tsl/platform:errors",
-#         "@tsl//tsl/platform:logging",
-#         "@tsl//tsl/platform:statusor",
-#     ],
-#     alwayslink = 1,  # static fusion registration
-# )
-#
-# xla_test(
-#     name = "cutlass_gemm_fusion_test",
-#     srcs = ["cutlass_gemm_fusion_test.cc"],
-#     backends = ["gpu"],
-#     deps = [
-#         ":custom_fusion_pattern",
-#         ":cutlass_gemm_fusion",
-#         "@com_google_absl//absl/strings",
-#         "//xla:debug_options_flags",
-#         "//xla:error_spec",
-#         "//xla/service/gpu:custom_fusion_rewriter",
-#         "//xla/tests:hlo_test_base",
-#         "@tsl//tsl/platform:test",
-#         "@tsl//tsl/platform:test_main",
-#     ],
-# )
-#
-# cuda_library(
-#     name = "cutlass_gemm_kernel",
-#     srcs = ["cutlass_gemm_kernel.cu.cc"],
-#     hdrs = ["cutlass_gemm_kernel.h"],
-#     visibility = ["//visibility:private"],
-#     deps = [
-#         ":custom_kernel",
-#         "//third_party/gpus/cutlass",
-#         "//xla:statusor",
-#         "//xla:xla_data_proto_cc",
-#         "//xla/stream_executor",
-#     ],
-# )
-#
-# xla_test(
-#     name = "cutlass_gemm_test",
-#     srcs = if_cuda_is_configured(["cutlass_gemm_test.cc"]),
-#     backends = ["gpu"],
-#     deps = [
-#         ":cutlass_gemm_kernel",
-#         "//xla:types",
-#         "//xla:xla_data_proto_cc",
-#         "//xla/stream_executor",
-#         "//xla/stream_executor:multi_platform_manager",
-#         "//xla/stream_executor:platform",
-#         "//xla/stream_executor/cuda:cuda_platform",
-#         "@tsl//tsl/lib/core:status_test_util",
-#         "@tsl//tsl/platform:status",
-#         "@tsl//tsl/platform:test",
-#         "@tsl//tsl/platform:test_benchmark",
-#         "@tsl//tsl/platform:test_main",
-#     ],
-# )
-#
+cc_library(
+    name = "cutlass_gemm_fusion",
+    srcs = ["cutlass_gemm_fusion.cc"],
+    hdrs = ["cutlass_gemm_fusion.h"],
+    deps = [
+        ":custom_fusion",
+        ":custom_fusion_pattern",
+        ":custom_kernel",
+        ":cutlass_gemm_kernel",
+        "@com_google_absl//absl/status",
+        "//xla:shape_util",
+        "//xla:status",
+        "//xla:statusor",
+        "//xla:xla_data_proto_cc",
+        "//xla/hlo/ir:hlo",
+        "//xla/service:pattern_matcher",
+        "@tsl//tsl/platform:errors",
+        "@tsl//tsl/platform:logging",
+        "@tsl//tsl/platform:statusor",
+    ],
+    alwayslink = 1,  # static fusion registration
+)
+
+xla_test(
+    name = "cutlass_gemm_fusion_test",
+    srcs = ["cutlass_gemm_fusion_test.cc"],
+    backends = ["gpu"],
+    deps = [
+        ":custom_fusion_pattern",
+        ":cutlass_gemm_fusion",
+        "@com_google_absl//absl/strings",
+        "//xla:debug_options_flags",
+        "//xla:error_spec",
+        "//xla/service/gpu:custom_fusion_rewriter",
+        "//xla/tests:hlo_test_base",
+        "@tsl//tsl/platform:test",
+        "@tsl//tsl/platform:test_main",
+    ],
+)
+
+cuda_library(
+    name = "cutlass_gemm_kernel",
+    srcs = ["cutlass_gemm_kernel.cu.cc"],
+    hdrs = ["cutlass_gemm_kernel.h"],
+    visibility = ["//visibility:private"],
+    deps = [
+        ":custom_kernel",
+        "@cutlass_archive//:cutlass",
+        "//xla:statusor",
+        "//xla:xla_data_proto_cc",
+        "//xla/stream_executor",
+    ],
+)
+
+xla_test(
+    name = "cutlass_gemm_test",
+    srcs = if_cuda_is_configured(["cutlass_gemm_test.cc"]),
+    backends = ["gpu"],
+    deps = [
+        ":cutlass_gemm_kernel",
+        "//xla:types",
+        "//xla:xla_data_proto_cc",
+        "//xla/stream_executor",
+        "//xla/stream_executor:multi_platform_manager",
+        "//xla/stream_executor:platform",
+        "//xla/stream_executor/cuda:cuda_platform",
+        "@tsl//tsl/lib/core:status_test_util",
+        "@tsl//tsl/platform:status",
+        "@tsl//tsl/platform:test",
+        "@tsl//tsl/platform:test_benchmark",
+        "@tsl//tsl/platform:test_main",
+    ],
+)
+
 # copybara:uncomment_end(google-only)
