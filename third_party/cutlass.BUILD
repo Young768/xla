@@ -20,5 +20,5 @@ filegroup(
 cc_library(
     name = "cutlass",
     hdrs = [":cutlass_header_files"],
-    include_prefix = "third_party/cutlass",
+    strip_include_prefix = "/include",
 )
