@@ -22,6 +22,8 @@ limitations under the License.
 namespace xla::gpu::kernel {
 
 // The most basic CUTLASS f32 gemm kernel.
+using stream_executor::Cast;
+
 using CutlassGemm =
     cutlass::gemm::device::Gemm<float, cutlass::layout::RowMajor, float,
                                 cutlass::layout::RowMajor, float,
