@@ -150,6 +150,29 @@ class CommandBufferInterface {
   virtual tsl::Status If(StreamExecutor* executor, DeviceMemory<bool> predicate,
                          CommandBuffer::Builder then_builder) = 0;
 
+  // Adds a conditional operation that will run a command buffer constructed by
+  // `then_builder` if `predicate` value is `true`, or a command buffer
+  // constructed by `else_builder` if `predicate` is `false`.
+  virtual tsl::Status IfElse(StreamExecutor* executor,
+                             DeviceMemory<bool> predicate,
+                             CommandBuffer::Builder then_builder,
+                             CommandBuffer::Builder else_builder) = 0;
+
+  // Adds a conditional operation that will run a command buffer constructed by
+  // the `branches` builder at `index`. If `index` is out of range, then it will
+  // run a conditional command buffer constructed by the last builder.
+  //
+  // See: https://github.com/openxla/stablehlo/blob/main/docs/spec.md#case
+  virtual tsl::Status Case(StreamExecutor* executor,
+                           DeviceMemory<int32_t> index,
+                           std::vector<CommandBuffer::Builder> branches) = 0;
+
+  // Adds a conditional operation that will run a command buffer constructed by
+  // the `body_builder` exactly `num_iteration` times.
+  virtual tsl::Status For(StreamExecutor* executor, int32_t num_iteration,
+                          DeviceMemory<int32_t> loop_index,
+                          CommandBuffer::Builder body_builder) = 0;
+
   // Finalizes command buffer and makes it executable. Once command buffer is
   // finalized no commands can be added to it.
   virtual tsl::Status Finalize() = 0;

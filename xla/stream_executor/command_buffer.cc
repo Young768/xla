@@ -18,6 +18,7 @@ limitations under the License.
 #include <cstdint>
 #include <memory>
 #include <utility>
+#include <vector>
 
 #include "absl/functional/any_invocable.h"
 #include "absl/status/status.h"
@@ -71,6 +72,17 @@ CommandBuffer& CommandBuffer::operator=(CommandBuffer&&) = default;
   return command_buffer;
 }
 
+/*static*/ bool CommandBuffer::SupportsConditionalCommands(
+    const Platform* platform) {
+  // TODO(ezhulenev): We should extend a Platform with a way to query
+  // implemented StreamExecutor features, for now we know that only CUDA
+  // platform supports conditional commands in command buffers.
+#if defined(STREAM_EXECUTOR_CUDA_ENABLE_GRAPH_CONDITIONAL)
+  return platform->Name() == "CUDA";
+#endif
+  return false;
+}
+
 const internal::CommandBufferInterface* CommandBuffer::implementation() const {
   return implementation_.get();
 }
@@ -107,6 +119,26 @@ tsl::Status CommandBuffer::MemcpyDeviceToDevice(DeviceMemoryBase* dst,
 tsl::Status CommandBuffer::If(StreamExecutor* executor, DeviceMemory<bool> pred,
                               Builder then_builder) {
   return implementation_->If(executor, pred, std::move(then_builder));
+}
+
+tsl::Status CommandBuffer::IfElse(StreamExecutor* executor,
+                                  DeviceMemory<bool> pred, Builder then_builder,
+                                  Builder else_builder) {
+  return implementation_->IfElse(executor, pred, std::move(then_builder),
+                                 std::move(else_builder));
+}
+
+tsl::Status CommandBuffer::Case(StreamExecutor* executor,
+                                DeviceMemory<int32_t> index,
+                                std::vector<Builder> branches) {
+  return implementation_->Case(executor, index, std::move(branches));
+}
+
+tsl::Status CommandBuffer::For(StreamExecutor* executor, int32_t num_iteration,
+                               DeviceMemory<int32_t> loop_index,
+                               Builder body_builder) {
+  return implementation_->For(executor, num_iteration, loop_index,
+                              std::move(body_builder));
 }
 
 CommandBuffer::Mode CommandBuffer::mode() const {

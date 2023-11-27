@@ -438,7 +438,7 @@ class GpuDriver {
   struct GpuGraphConditionalNodeParams {
     // Conditional node type.
     // https://docs.nvidia.com/cuda/cuda-driver-api/group__CUDA__TYPES.html#group__CUDA__TYPES_1g04ade961d0263336423eb216fbe514da
-    enum class Type { kIf };
+    enum class Type { kIf, kWhile };
 
     // A struct for returning output arguments back to the caller.
     struct Result {
@@ -461,6 +461,12 @@ class GpuDriver {
   static tsl::StatusOr<GpuGraphNodeResult> GraphAddNode(
       GpuGraphNodeHandle* node, GpuGraphHandle graph,
       absl::Span<GpuGraphNodeHandle> deps, const GpuGraphNodeParams& params);
+
+  // Creates an empty node and adds it to a graph.
+  // https://docs.nvidia.com/cuda/cuda-driver-api/group__CUDA__GRAPH.html#group__CUDA__GRAPH_1g14b625984430cb2d574c63f29c9b9223
+  static tsl::Status GraphAddEmptyNode(GpuGraphNodeHandle* node,
+                                       GpuGraphHandle graph,
+                                       absl::Span<GpuGraphNodeHandle> deps);
 
   // Creates a kernel execution node and adds it to a graph.
   // https://docs.nvidia.com/cuda/cuda-driver-api/group__CUDA__GRAPH.html#group__CUDA__GRAPH_1g50d871e3bd06c1b835e52f2966ef366b
