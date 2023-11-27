@@ -15,7 +15,7 @@ limitations under the License.
 
 #include "xla/service/gpu/kernels/cutlass_gemm_kernel.h"
 
-#include "third_party/cutlass/include/cutlass/gemm/device/gemm.h"
+#include "include/cutlass/gemm/device/gemm.h"
 #include "xla/stream_executor/kernel.h"
 #include "xla/xla_data.pb.h"
 
