@@ -13,23 +13,53 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#ifndef XLA_SERVICE_GPU_KERNELS_CUTLASS_GEMM_CUSTOM_KERNEL_H_
-#define XLA_SERVICE_GPU_KERNELS_CUTLASS_GEMM_CUSTOM_KERNEL_H_
+#include "xla/service/gpu/kernels/cutlass_gemm_custom_kernel.h"
 
 #include <cstdint>
+#include <utility>
 
+#include "absl/status/status.h"
 #include "xla/service/gpu/kernels/custom_kernel.h"
-#include "xla/service/gpu/kernels/cutlass_gemm.h"
+#include "xla/service/gpu/kernels/cutlass_gemm_kernel.cu.h"
+#include "xla/service/gpu/kernels/cutlass_gemm_kernels.cu.h"
 #include "xla/statusor.h"
+#include "xla/stream_executor/kernel_spec.h"
 #include "xla/xla_data.pb.h"
 
 namespace xla::gpu::kernel::gemm_universal {
 
+template <typename Gemm>
+static StatusOr<CustomKernel> LoadCutlassGemmUniversal(
+    int32_t m, int32_t n, int32_t k, const ArgsIndices& indices,
+    const DynamicSliceIndices& slices) {
+  using Kernel = typename Gemm::GemmKernel;
+
+  cutlass::gemm::GemmCoord problem_size = {m, n, k};
+
+  auto packing = ArgsPacking<Gemm>(problem_size, indices, slices);
+
+  se::MultiKernelLoaderSpec spec(/*arity=*/2, std::move(packing));
+  spec.AddInProcessSymbol(GetKernelSymbol<Gemm>(), "cutlass_gemm");
+
+  return CustomKernel("cutlass_gemm", std::move(spec),
+                      BlockDim<Gemm>(problem_size), ThreadDim<Gemm>(),
+                      sizeof(typename Kernel::SharedStorage));
+}
+
 StatusOr<CustomKernel> GetCutlassGemmKernel(PrimitiveType dtype, int32_t m,
                                             int32_t n, int32_t k,
                                             const ArgsIndices& indices,
-                                            const DynamicSliceIndices& slices);
+                                            const DynamicSliceIndices& slices) {
+  switch (dtype) {
+    case PrimitiveType::F32:
+      return LoadCutlassGemmUniversal<CutlassGemmKernels::F32xF32toF32>(
+          m, n, k, indices, slices);
+    case PrimitiveType::BF16:
+      return LoadCutlassGemmUniversal<CutlassGemmKernels::BF16xBF16toBF16>(
+          m, n, k, indices, slices);
+    default:
+      return absl::InvalidArgumentError("Unsupported CUTLASS gemm data type");
+  }
+}
 
 }  // namespace xla::gpu::kernel::gemm_universal
-
-#endif  // XLA_SERVICE_GPU_KERNELS_CUTLASS_GEMM_CUSTOM_KERNEL_H_
