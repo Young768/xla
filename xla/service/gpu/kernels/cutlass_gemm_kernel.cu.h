@@ -44,6 +44,7 @@ namespace xla::gpu::kernel::gemm_universal {
 // an instance of `cutlass::gemm::device::GemmUniversal` template.
 
 namespace se = ::stream_executor;
+using stream_executor::Cast;
 
 //===----------------------------------------------------------------------===//
 // Gemm launch dimension computation.
