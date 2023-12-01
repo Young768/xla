@@ -151,7 +151,7 @@ std::optional<CustomFusionPattern::Match> CutlassGemmPattern::TryMatch(
   auto* dot = DynCast<HloDotInstruction>(instr);
   if (!dot) return std::nullopt;
 
-  auto matched = MatchSimpleGemm(dot, PrimitiveType::F32);
+  auto matched = MatchSimpleGemm(dot, PrimitiveType::BF16);
   if (!matched.ok()) return std::nullopt;
 
   CustomFusionConfig config;
@@ -206,7 +206,7 @@ class CutlassGemmFusion : public CustomFusion {
           "cutlass_gemm requires ROOT operation to be a dot");
     }
 
-    TF_RETURN_IF_ERROR(MatchSimpleGemm(dot, PrimitiveType::F32));
+    TF_RETURN_IF_ERROR(MatchSimpleGemm(dot, PrimitiveType::BF16));
 
     auto dtype = dot->shape().element_type();
 
