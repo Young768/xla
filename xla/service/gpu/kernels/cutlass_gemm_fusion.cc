@@ -149,6 +149,19 @@ CutlassGemmWithUpcastPattern::TryMatch(HloInstruction* instr) const {
                              : Match{config, {matched->rhs_upcast, instr}};
 }
 
+std::optional<CustomFusionPattern::Match>
+CutlassGemmWithBF16Pattern::TryMatch(HloInstruction* instr) const {
+  auto* dot = DynCast<HloDotInstruction>(instr);
+  if (!dot) return std::nullopt;
+
+  auto matched = MatchSimpleGemm(dot, PrimitiveType::BF16);
+  if (!matched.ok()) return std::nullopt;
+
+  CustomFusionConfig config;
+  config.set_name("cutlass_bf16_gemm");
+  return Match{config, {instr}};
+}
+
 //===----------------------------------------------------------------------===//
 // Cutlass Gemm Fusions
 //===----------------------------------------------------------------------===//
@@ -164,6 +177,33 @@ class CutlassGemmFusion : public CustomFusion {
     }
 
     TF_RETURN_IF_ERROR(MatchSimpleGemm(dot, PrimitiveType::F32));
+
+    auto dtype = dot->shape().element_type();
+
+    auto& lhs_shape = dot->operand(0)->shape();
+    auto& rhs_shape = dot->operand(1)->shape();
+
+    size_t m = lhs_shape.dimensions(0);
+    size_t k = lhs_shape.dimensions(1);
+    size_t n = rhs_shape.dimensions(1);
+
+    TF_ASSIGN_OR_RETURN(auto kernel,
+                        kernel::GetCutlassGemmKernel(dtype, m, n, k));
+    return std::vector<CustomKernel>{std::move(kernel)};
+  }
+};
+
+class CutlassBF16GemmFusion : public CustomFusion {
+ public:
+  StatusOr<std::vector<CustomKernel>> LoadKernels(
+      const HloComputation* computation) const final {
+    auto* dot = DynCast<HloDotInstruction>(computation->root_instruction());
+    if (dot == nullptr) {
+      return absl::InternalError(
+          "cutlass_gemm requires ROOT operation to be a dot");
+    }
+
+    TF_RETURN_IF_ERROR(MatchSimpleGemm(dot, PrimitiveType::BF16));
 
     auto dtype = dot->shape().element_type();
 
@@ -210,7 +250,9 @@ class CutlassGemmWithUpcastFusion : public CustomFusion {
 }  // namespace xla::gpu
 
 XLA_REGISTER_CUSTOM_FUSION_PATTERN(::xla::gpu::CutlassGemmPattern);
+XLA_REGISTER_CUSTOM_FUSION_PATTERN(::xla::gpu::CutlassGemmWithBF16Pattern);
 
 XLA_REGISTER_CUSTOM_FUSION("cutlass_gemm", ::xla::gpu::CutlassGemmFusion);
+XLA_REGISTER_CUSTOM_FUSION("cutlass_gemm", ::xla::gpu::CutlassBF16GemmFusion);
 XLA_REGISTER_CUSTOM_FUSION("cutlass_gemm_with_upcast",
                            ::xla::gpu::CutlassGemmWithUpcastFusion);

@@ -3526,8 +3526,9 @@ Status IrEmitterUnnested::EmitOp(
           ir_emitter_context_->gpu_device_info();
       TF_ASSIGN_OR_RETURN(auto fusion_analysis,
                           HloFusionAnalysis::Create(instr, &device_info));
-      // TODO(anlunx): Add support for emitting specialized kLoops.
-      if (!IsSpecializedLoopFusion(op, ir_emitter_context_->allocations(),
+      if (instr->IsCustomFusion() ||
+          // TODO(anlunx): Add support for emitting specialized kLoops.
+          !IsSpecializedLoopFusion(op, ir_emitter_context_->allocations(),
                                    fusion_analysis)) {
         return EmitFusion(instr, fusion_analysis);
       }
