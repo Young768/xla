@@ -312,6 +312,9 @@ class CutlassGemmWithDynamicUpdateSliceFusion : public CustomFusion {
 XLA_REGISTER_CUSTOM_FUSION_PATTERN(
     ::xla::gpu::CutlassGemmWithDynamicUpdateSlicePattern);
 
+XLA_REGISTER_CUSTOM_FUSION_PATTERN(
+    ::xla::gpu::CutlassGemmPattern);
+
 XLA_REGISTER_CUSTOM_FUSION("cutlass_gemm", ::xla::gpu::CutlassGemmFusion);
 XLA_REGISTER_CUSTOM_FUSION("cutlass_gemm_with_upcast",
                            ::xla::gpu::CutlassGemmWithUpcastFusion);
