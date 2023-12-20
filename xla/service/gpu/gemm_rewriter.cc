@@ -1374,7 +1374,7 @@ class GemmRewriterVisitor : public DfsHloRewriteVisitor {
     size_t num_col_dims = gemm->operand(1)->shape().rank() -
                           dot_dims.rhs_batch_dimensions_size() -
                           dot_dims.rhs_contracting_dimensions_size();
-
+    std::cout<<"debug rank "<< bias->shape().rank() << " and num_col_dims "<< num_col_dims<<std::endl;
     if ((gemm->user_count() != 1) ||
         (config.epilogue() != GemmBackendConfig::DEFAULT) ||
         (bias->shape().rank() != num_col_dims)) {
