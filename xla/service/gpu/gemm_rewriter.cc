@@ -1374,16 +1374,36 @@ class GemmRewriterVisitor : public DfsHloRewriteVisitor {
     size_t num_col_dims = gemm->operand(1)->shape().rank() -
                           dot_dims.rhs_batch_dimensions_size() -
                           dot_dims.rhs_contracting_dimensions_size();
+    
+    absl::Span<const int64_t> broadcast_dims = broadcast->dimensions();
+
+    std::unique_ptr<HloInstruction> new_broadcast = nullptr;
+
+    if (bias->shape().rank() != num_col_dims)
+    {
+
+      HloInstruction *new_bitcast =
+          MakeBitcastHlo(bias, gemm->shape(), &bias->metadata());
+
+      std::vector<HloInstruction*> new_operands;
+      new_operands.push_back(new_bitcast);
+      new_broadcast = broadcast->CloneWithNewOperands(new_bitcast->shape(), new_operands);
+
+      ReplaceWithNewInstruction(broadcast, std::move(new_broadcast))
+      
+    }
     std::cout<<"debug rank "<< bias->shape().rank() << " and num_col_dims "<< num_col_dims<<std::endl;
     if ((gemm->user_count() != 1) ||
         (config.epilogue() != GemmBackendConfig::DEFAULT) ||
-        (bias->shape().rank() != num_col_dims)) {
-      return false;
+        ) {
+        if (bias->shape().rank() != num_col_dims && new_broadcast == nullptr)
+        {
+          return false;
+        }
     }
     // We require the bias vector to have been broadcast in the most major
     // dimensions; i.e. its most minor physical dimensions align with most minor
     // physical dimensions of the gemm output.
-    absl::Span<const int64_t> broadcast_dims = broadcast->dimensions();
     for (size_t i = 0; i < num_col_dims; ++i) {
       int64_t dim =
           (bitcast ? bitcast : gemm)->shape().layout().minor_to_major(i);
