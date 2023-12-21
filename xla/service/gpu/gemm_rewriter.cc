@@ -1389,13 +1389,12 @@ class GemmRewriterVisitor : public DfsHloRewriteVisitor {
       new_operands.push_back(new_bitcast);
       new_broadcast = broadcast->CloneWithNewOperands(new_bitcast->shape(), new_operands);
 
-      ReplaceWithNewInstruction(broadcast, std::move(new_broadcast))
+      TF_RETURN_IF_ERROR(ReplaceWithNewInstruction(broadcast, std::move(new_broadcast)));
       
     }
     std::cout<<"debug rank "<< bias->shape().rank() << " and num_col_dims "<< num_col_dims<<std::endl;
     if ((gemm->user_count() != 1) ||
-        (config.epilogue() != GemmBackendConfig::DEFAULT) ||
-        ) {
+        (config.epilogue() != GemmBackendConfig::DEFAULT)) {
         if (bias->shape().rank() != num_col_dims && new_broadcast == nullptr)
         {
           return false;
