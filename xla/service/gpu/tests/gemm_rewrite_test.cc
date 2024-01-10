@@ -7474,6 +7474,65 @@ ENTRY AddDotsFunc {
   EXPECT_TRUE(RunAndCompare(hlo_text, ErrorSpec{1e-5, 1e-5}));
 }
 
+// A test fixture class for tests which are specific to cublasLt
+class CutlassGemmRewriteTest : public GemmRewriteTest {
+ public:
+  DebugOptions GetDebugOptionsForTest() override {
+    DebugOptions debug_options = GemmRewriteTest::GetDebugOptionsForTest();
+    debug_options.set_xla_gpu_enable_cublaslt(true);
+    debug_options.set_xla_gpu_enable_triton_gemm(false);
+    return debug_options;
+  }
+
+ protected:
+  void SetUp() override {
+    if (SkipGpuBlasLtTest()) {
+      GTEST_SKIP() << "Cutlass is not supported on this GPU architecture";
+    }
+  }
+};
+
+TEST_F(CutlassGemmRewriteTest, GemmBiasFusion) {
+  const char* hlo_text = R"(
+HloModule test
+
+ENTRY test {
+  x = f32[32,128,1024]{2,1,0} parameter(0)
+  y = f32[1024,3072]{1,0} parameter(1)
+  dot = f32[32,128,3072]{2,1,0} dot(x, y), lhs_contracting_dims={2}, rhs_contracting_dims={0}
+  z = f32[3072]{0} parameter(2)
+  reshape.5 = f32[1,1,3072]{2,1,0} reshape(z)
+  broadcast.6 = f32[1,1,3072]{2,1,0} broadcast(reshape.5), dimensions={0,1,2}
+  reshape.7 = f32[3072]{0} reshape(broadcast.6)
+  broadcast.8 = f32[32,128,3072]{2,1,0} broadcast(reshape.7), dimensions={2}
+  ROOT add.9 = f32[32,128,3072]{2,1,0} add(dot, broadcast.8)
+}
+
+)";
+
+  MatchOptimizedHlo(hlo_text,
+                    R"(
+
+; CHECK-LABEL: HloModule test, entry_computation_layout={(f32[32,128,1024]{2,1,0}, f32[1024,3072]{1,0}, f32[3072]{0})->f32[32,128,3072]{2,1,0}}
+; CHECK-DAG:     %cutlass_gemm_dot.1_computation (lhs: f32[4096,1024], rhs: f32[1024,3072], bcast_: f32[3072]) -> f32[4096,3072] {
+; CHECK-NEXT:    %lhs = f32[4096,1024]{1,0} parameter(0)
+; CHECK-NEXT:    %rhs = f32[1024,3072]{1,0} parameter(1)
+; CHECK-NEXT:    %dot.2 = f32[4096,3072]{1,0} dot(%lhs, %rhs), lhs_contracting_dims={1}, rhs_contracting_dims={0}
+; CHECK-NEXT:    %bcast_ = f32[3072]{0} parameter(2)
+; CHECK-NEXT:    %broadcast.3 = f32[4096,3072]{1,0} broadcast(%bcast_), dimensions={1}
+; CHECK-NEXT:    ROOT %add.2 = f32[4096,3072]{1,0} add(%dot.2, %broadcast.3)
+; CHECK:         }
+; CHECK-LABEL: ENTRY %test (x: f32[32,128,1024], y: f32[1024,3072], z: f32[3072]) -> f32[32,128,3072] {
+; CHECK-NEXT:   %x = f32[32,128,1024]{2,1,0} parameter(0)
+; CHECK-NEXT:   %bitcast.19 = f32[4096,1024]{1,0} bitcast(%x)
+; CHECK-NEXT:   %y = f32[1024,3072]{1,0} parameter(1)
+; CHECK-NEXT:   %z = f32[3072]{0} parameter(2)
+; CHECK-DAG:   %cutlass_gemm_dot.1 = f32[4096,3072]{1,0} fusion(%bitcast.19, %y, %z), kind=kCustom, calls=%cutlass_gemm_dot.1_computation, backend_config={"kind":"__cutlass_gemm"}
+; CHECK-NEXT:  ROOT %bitcast.1 = f32[32,128,3072]{2,1,0} bitcast(%cutlass_gemm_dot.1)
+; CHECK: }
+      )");
+}
+
 }  // namespace
 }  // namespace gpu
 }  // namespace xla

@@ -590,6 +590,7 @@ StatusOr<FusionDecision> CreateDotFusion(
   return "No profitable operations to fuse.";
 }
 
+
 // Extracts into fused computations parts of HLO graph including dot()
 // operations that can target the triton GEMM emitter.
 class GemmRewriterTritonVisitor : public DfsHloRewriteVisitor {
