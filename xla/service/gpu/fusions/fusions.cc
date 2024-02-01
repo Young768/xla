@@ -166,7 +166,7 @@ absl::StatusOr<std::unique_ptr<FusionInterface>> GetFusionEmitter(
     const FusionInfo& fusion_info) {
   const auto& analysis = fusion_info.analysis();
   const FusionBackendConfig& backend_config = analysis.fusion_backend_config();
-
+  std::cout<<"logging from GetFusionEmitter"<<std::endl;
   switch (analysis.GetEmitterFusionKind()) {
     case HloFusionAnalysis::EmitterFusionKind::kCustomFusion: {
       const auto& config = backend_config.custom_fusion_config();
