@@ -558,6 +558,7 @@ GpuThunkAotCompilationResult::LoadExecutable(
   // TODO(anlunx): EmitLmhloRegion emits fusion kernels. We need to make sure
   // ptx and cubin already contain emission results and disable kernel emission
   // here.
+  std::cout<<"emit code from gpu compiler"<<std::endl;
   TF_RETURN_IF_ERROR(
       ir_emitter->EmitLmhloRegion(&entry_function.getBody(), operation_map));
   std::unique_ptr<ThunkSequence> thunk_sequence =

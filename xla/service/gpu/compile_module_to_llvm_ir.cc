@@ -419,7 +419,7 @@ absl::StatusOr<CompileModuleResults> CompileModuleToLlvmIr(
   {
     XLA_SCOPED_LOGGING_TIMER(absl::StrCat(
         "GpuCompiler::RunBackend - IR emission for ", hlo_module->name()));
-
+    std::cout<<"emit code from compile module to llvm."<<std::endl;
     TF_RETURN_IF_ERROR(
         ir_emitter->EmitLmhloRegion(&entry_function.getBody(), operation_map));
 
