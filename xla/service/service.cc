@@ -295,6 +295,7 @@ StatusOr<std::vector<std::unique_ptr<Executable>>> Service::BuildExecutables(
                                          std::move(executors), options));
   } else {
     auto modules = module_group->ConsumeModules();
+    std::cout<<"logging from BuildExecutable 0"<<std::endl;
     for (std::unique_ptr<HloModule>& module : modules) {
       TF_ASSIGN_OR_RETURN(std::unique_ptr<Executable> executable,
                           backend->compiler()->RunBackend(
@@ -778,6 +779,7 @@ StatusOr<std::unique_ptr<Executable>> Service::BuildExecutable(
   tsl::profiler::ScopedAnnotation backend_annotation{[&] {
     return absl::StrCat("XlaCompileBackend:#module=", module_proto.name(), "#");
   }};
+  std::cout<<"logging from BuildExecutable_1"<<std::endl;
   TF_ASSIGN_OR_RETURN(
       std::unique_ptr<Executable> executable,
       backend->compiler()->RunBackend(std::move(module), executor, options));
