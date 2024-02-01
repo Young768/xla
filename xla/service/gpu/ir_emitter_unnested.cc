@@ -4260,7 +4260,7 @@ absl::Status IrEmitterUnnested::EmitOp(
       const se::DeviceDescription& device_info =
           ir_emitter_context_->gpu_device_info();
       auto fusion_analysis = HloFusionAnalysis::Create(instr, &device_info);
-      std::cout<<"op name"<<op->getName().getStringRef()<<std::endl;
+      //std::cout<<"op name"<<op->getName().getStringRef()<<std::endl;
       std::cout<<"logging from emiit op_0"<<std::endl;
       return EmitFusion(instr, fusion_analysis);
     }
