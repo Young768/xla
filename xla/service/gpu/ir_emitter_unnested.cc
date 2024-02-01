@@ -2622,7 +2622,7 @@ static absl::Status ProcessFusionForConversion(
 
 absl::Status IrEmitterUnnested::EmitFusion(const HloFusionInstruction* instr,
                                            HloFusionAnalysis& fusion_analysis) {
-  std::cout<<"logging from 1st EmitFusion"<<std::endl;
+  std::cout<<"logging from 1st EmitFusion: "<<instr->name()<<std::endl;
   TF_ASSIGN_OR_RETURN(
       std::unique_ptr<FusionInterface> emitter,
       GetFusionEmitter(HloFusionInfo(
@@ -4260,6 +4260,7 @@ absl::Status IrEmitterUnnested::EmitOp(
       const se::DeviceDescription& device_info =
           ir_emitter_context_->gpu_device_info();
       auto fusion_analysis = HloFusionAnalysis::Create(instr, &device_info);
+      std::cout<<"op name"<<op->getName().getStringRef()<<std::endl;
       std::cout<<"logging from emiit op_0"<<std::endl;
       return EmitFusion(instr, fusion_analysis);
     }
