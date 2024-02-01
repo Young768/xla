@@ -2622,6 +2622,7 @@ static absl::Status ProcessFusionForConversion(
 
 absl::Status IrEmitterUnnested::EmitFusion(const HloFusionInstruction* instr,
                                            HloFusionAnalysis& fusion_analysis) {
+  std::cout<<"logging from 1st EmitFusion"<<std::endl;
   TF_ASSIGN_OR_RETURN(
       std::unique_ptr<FusionInterface> emitter,
       GetFusionEmitter(HloFusionInfo(
@@ -2634,6 +2635,7 @@ absl::Status IrEmitterUnnested::EmitFusion(
     mlir::Operation* op,
     const absl::flat_hash_map<const mlir::Operation*, const HloInstruction*>&
         hlo_for_lmhlo) {
+  std::cout<<"logging from 2nd EmitFusion"<<std::endl;
   auto fusion_op = mlir::cast<mlir::lmhlo::FusionOp>(op);
   auto* fusion = Cast<HloFusionInstruction>(hlo_for_lmhlo.at(fusion_op));
 
@@ -4258,9 +4260,10 @@ absl::Status IrEmitterUnnested::EmitOp(
       const se::DeviceDescription& device_info =
           ir_emitter_context_->gpu_device_info();
       auto fusion_analysis = HloFusionAnalysis::Create(instr, &device_info);
+      std::cout<<"logging from emiit op_0"<<std::endl;
       return EmitFusion(instr, fusion_analysis);
     }
-
+    std::cout<<"logging from emiit op_1"<<std::endl;
     return EmitFusion(op, hlo_for_lmhlo);
   }
 
@@ -4584,6 +4587,7 @@ absl::Status IrEmitterUnnested::EmitHloInstruction(
       const se::DeviceDescription& device_info =
           ir_emitter_context_->gpu_device_info();
       auto fusion_analysis = HloFusionAnalysis::Create(fusion, &device_info);
+      std::cout<<"logging from emiit fusion"<<std::endl;
       return EmitFusion(fusion, fusion_analysis);
     }
     case HloOpcode::kInfeed:
