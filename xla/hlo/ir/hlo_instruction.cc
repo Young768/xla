@@ -4309,7 +4309,7 @@ Status HloInstruction::Accept(DfsHloVisitorBase<HloInstructionPtr>* visitor,
                               bool call_finish_visit,
                               bool ignore_control_predecessors,
                               bool cross_computation) {
-  std::cout<<"logging from Accept"<<std::endl;
+  //std::cout<<"logging from Accept"<<std::endl;
   VLOG(0) << "HloInstruction::Accept(%" << name() << ")";
   TF_RETURN_IF_ERROR(PostOrderDFS(this, visitor, std::nullopt,
                                   ignore_control_predecessors,
@@ -4327,7 +4327,7 @@ template Status HloInstruction::Accept(ConstDfsHloVisitor*, bool, bool, bool);
 Status HloInstruction::AcceptWithOperandOrder(DfsHloVisitor* visitor,
                                               CompareFunction operand_order,
                                               bool call_finish_visit) {
-  std::cout<<"logging from AcceptWithOperandOrder"<<std::endl;
+  //std::cout<<"logging from AcceptWithOperandOrder"<<std::endl;
   VLOG(0) << "HloInstruction::AcceptWithOperandOrder(%" << name() << ")";
   auto func = [operand_order](std::pair<int, const HloInstruction*> a,
                               std::pair<int, const HloInstruction*> b) {
