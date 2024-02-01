@@ -673,7 +673,7 @@ class GemmRewriterTritonVisitor : public DfsHloRewriteVisitor {
   // and replaces the original dot() with a call to the computation.
   absl::Status HandleDot(HloInstruction* dot) override {
     CHECK_EQ(dot->opcode(), HloOpcode::kDot);
-
+    std::cout<<"triton handle dot"<<std::endl;
     std::string fusion_name = absl::StrCat("triton_gemm_", dot->name());
     HloComputation::Builder builder(absl::StrCat(fusion_name, "_computation"));
     std::vector<HloInstruction*> fusion_inputs;
