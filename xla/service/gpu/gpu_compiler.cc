@@ -1884,6 +1884,7 @@ GpuCompiler::CompileToBackendResult(
                       se::MultiPlatformManager::PlatformWithId(PlatformId()));
 
   // Compile the module
+  std::cout<<"entering the compilation module"<<std::endl;
   TF_ASSIGN_OR_RETURN(
       CompileModuleResults compile_module_results,
       CompileModuleToLlvmIr(module, llvm_context, target_triple_, data_layout_,
@@ -1920,6 +1921,7 @@ GpuCompiler::CompileToBackendResult(
 absl::StatusOr<std::unique_ptr<Executable>> GpuCompiler::RunBackend(
     std::unique_ptr<HloModule> module, se::StreamExecutor* stream_exec,
     const CompileOptions& options) {
+  std::cout<<"run backend...................."<<std::endl;
   const DebugOptions& debug_opts = module->config().debug_options();
   TF_ASSIGN_OR_RETURN(TargetConfig gpu_target_config,
                       GetTargetConfig(options, debug_opts, stream_exec));
