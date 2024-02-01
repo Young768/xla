@@ -142,6 +142,7 @@ Status HloPreOrderDFS::Run(const HloComputation& computation,
       }
     }
     TF_RETURN_IF_ERROR(visitor->Preprocess(to_visit));
+    std::cout<<"run HloPreOrderDFS"<<std::endl;
     TF_RETURN_IF_ERROR(to_visit->Visit(visitor));
     TF_RETURN_IF_ERROR(visitor->Postprocess(to_visit));
   }

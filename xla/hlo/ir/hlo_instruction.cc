@@ -4243,6 +4243,7 @@ static Status PostOrderDFS(HloInstruction* root, Visitor* visitor,
 
       TF_RETURN_IF_ERROR(visitor->Preprocess(current_node));
       VLOG(2) << "Visiting HLO %" << current_node->name();
+      std::cout<<"run PostOrderDFS"<<std::endl;
       TF_RETURN_IF_ERROR(current_node->Visit(visitor));
       visitor->SetVisitState(current_id, Visitor::kVisited);
       TF_RETURN_IF_ERROR(visitor->Postprocess(current_node));

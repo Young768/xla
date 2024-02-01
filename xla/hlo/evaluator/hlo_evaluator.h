@@ -279,6 +279,7 @@ class HloEvaluator : public ConstDfsHloVisitorWithDefault {
   // Wraps around instruction handling to infer types before dispatching to
   // the corresponding typed Visitor.
   Status DefaultAction(const HloInstruction* hlo) override {
+    std::cout<<"run DefaultAction"<<std::endl;
     return hlo->Visit(typed_visitors_[hlo->shape().element_type()].get());
   }
 
