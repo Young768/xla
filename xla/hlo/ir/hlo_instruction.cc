@@ -3929,6 +3929,7 @@ HloInstruction::HloInstruction(HloOpcode opcode, const Shape& shape)
 
 template <typename HloInstructionPtr>
 Status HloInstruction::Visit(DfsHloVisitorBase<HloInstructionPtr>* visitor) {
+  std::cout<<"vist op...."<<std::endl;
   switch (opcode_) {
     case HloOpcode::kAbs:
       return visitor->HandleAbs(this);
@@ -3993,7 +3994,10 @@ Status HloInstruction::Visit(DfsHloVisitorBase<HloInstructionPtr>* visitor) {
     case HloOpcode::kMultiply:
       return visitor->HandleMultiply(this);
     case HloOpcode::kDot:
-      return visitor->HandleDot(this);
+      { 
+        std::cout<<"vist kDot op...."<<std::endl;
+        return visitor->HandleDot(this);
+      }
     case HloOpcode::kPower:
       return visitor->HandlePower(this);
     case HloOpcode::kRemainder:
