@@ -765,6 +765,7 @@ StatusOr<std::unique_ptr<Executable>> Service::BuildExecutable(
   DumpHloModuleIfEnabled(*module, kBeforeOptimizationsDumpName);
 
   std::unique_ptr<HloProto> hlo_proto_before_opt;
+  std::cout<<"start running optimization passes."<<std::endl;
   if (!run_backend_only) {
     // Save proto state before optimizations if we want a snapshot.
     // When run_backend_only is enabled the post-optimization HLO will be the
