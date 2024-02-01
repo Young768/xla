@@ -4243,7 +4243,6 @@ static Status PostOrderDFS(HloInstruction* root, Visitor* visitor,
 
       TF_RETURN_IF_ERROR(visitor->Preprocess(current_node));
       VLOG(2) << "Visiting HLO %" << current_node->name();
-      std::cout<<"run PostOrderDFS"<<std::endl;
       TF_RETURN_IF_ERROR(current_node->Visit(visitor));
       visitor->SetVisitState(current_id, Visitor::kVisited);
       TF_RETURN_IF_ERROR(visitor->Postprocess(current_node));
@@ -4310,7 +4309,7 @@ Status HloInstruction::Accept(DfsHloVisitorBase<HloInstructionPtr>* visitor,
                               bool call_finish_visit,
                               bool ignore_control_predecessors,
                               bool cross_computation) {
-  VLOG(3) << "HloInstruction::Accept(%" << name() << ")";
+  VLOG(0) << "HloInstruction::Accept(%" << name() << ")";
   TF_RETURN_IF_ERROR(PostOrderDFS(this, visitor, std::nullopt,
                                   ignore_control_predecessors,
                                   cross_computation));
@@ -4327,7 +4326,7 @@ template Status HloInstruction::Accept(ConstDfsHloVisitor*, bool, bool, bool);
 Status HloInstruction::AcceptWithOperandOrder(DfsHloVisitor* visitor,
                                               CompareFunction operand_order,
                                               bool call_finish_visit) {
-  VLOG(2) << "HloInstruction::AcceptWithOperandOrder(%" << name() << ")";
+  VLOG(0) << "HloInstruction::AcceptWithOperandOrder(%" << name() << ")";
   auto func = [operand_order](std::pair<int, const HloInstruction*> a,
                               std::pair<int, const HloInstruction*> b) {
     // Call the client's comparison function on the actual HloInstruction*
