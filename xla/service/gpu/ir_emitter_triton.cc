@@ -1556,6 +1556,7 @@ absl::Status EmitMatMul(mlir::OpBuilder builder,
                         const HloComputation* computation,
                         mlir::triton::FuncOp fn,
                         const TritonGemmConfig& config) {
+  std::cout<<"triton is emitting matmul"<<std::endl;
   const HloDotInstruction* dot_instr = DynCast<HloDotInstruction>(
       hlo_query::GetFirstInstructionWithOpcode(*computation, HloOpcode::kDot));
   // Use 32-bit indexing if addressing any of the inputs or the output (which

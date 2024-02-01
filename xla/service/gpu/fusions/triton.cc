@@ -97,6 +97,8 @@ LaunchDimensions CalculateSoftMaxLaunchDimensions(
 absl::StatusOr<FusionEmissionResult> TritonFusion::Emit(
     IrEmitterContext& ir_emitter_context, mlir::lmhlo::FusionOp fusion_op,
     const HloFusionInstruction& fusion) const {
+    
+    std::cout<<"triton is emitting the fusion"<<std::endl;
   llvm::IRBuilder builder(ir_emitter_context.llvm_module()->getContext());
 #if GOOGLE_CUDA
   if (!ir_emitter_context.emit_ir_from_hlo()) {
