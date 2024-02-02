@@ -4472,6 +4472,7 @@ absl::Status IrEmitterUnnested::EmitLmhloRegion(
     mlir::Region* region,
     const absl::flat_hash_map<const mlir::Operation*, const HloInstruction*>&
         hlo_for_lmhlo) {
+  std::cout<<"logging from EmitLmhloRegion"<<std::endl;
   for (mlir::Operation& op : llvm::make_early_inc_range(region->front())) {
     TF_RETURN_IF_ERROR(EmitOp(&op, hlo_for_lmhlo));
   }
