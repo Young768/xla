@@ -123,7 +123,7 @@ absl::StatusOr<FusionEmissionResult> TritonFusion::Emit(
 
   auto generate = [&]() -> absl::StatusOr<KernelReuseCache::Entry> {
     VLOG(3) << "Generating: " << suggested_kernel_name;
-
+    std::cout<<"Generating: " << suggested_kernel_name<<std::endl;
     const std::string impl_fn_name =
         ir_emitter_context.name_uniquer()->GetUniqueName(
             llvm_ir::SanitizeFunctionName(
