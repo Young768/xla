@@ -331,6 +331,7 @@ absl::Status NVPTXCompiler::AddConvAndGemmAutotuningPasses(
 absl::Status NVPTXCompiler::AddTritonGemmAutotuningPasses(
     HloPassPipeline* pipeline, HloModule* hlo_module,
     AutotuneConfig& autotune_config, tsl::thread::ThreadPool* thread_pool) {
+  std::cout<<"do we run triton gemm autotuner????????????????????????????????"<<std::endl;
   pipeline->AddPass<TritonAutotuner>(autotune_config, thread_pool);
   return absl::OkStatus();
 }
