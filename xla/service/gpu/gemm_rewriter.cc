@@ -473,6 +473,25 @@ auto OptionalBitcast(HloInstruction **optional_bitcast, Pattern pattern) {
 // 6 are elided only if steps 1 through 3 were successfully transformed. Step
 // 4 requires steps 5 and 6, i.e. the computation of DAmax can be elided only
 // when the output of the GEMM is requested in FP8 format.
+
+// Clones the hero kDot operation into the fusion.
+HloInstruction& FuseDot(const HloDotInstruction& dot,
+                        const HloInstruction& fused_lhs,
+                        const HloInstruction& fused_rhs,
+                        HloComputation::Builder& builder  // append
+) {
+  CHECK_EQ(dot.operand_count(), 2);
+  VLOG(3) << "Fusing " << dot.ToString();
+
+  std::array<HloInstruction*, 2> hlo_new_operands = {
+      const_cast<HloInstruction*>(&fused_lhs),
+      const_cast<HloInstruction*>(&fused_rhs)};
+  return *builder.AddInstruction(
+      dot.CloneWithNewOperands(dot.shape(), hlo_new_operands));
+}
+
+inline constexpr absl::string_view kCutlassGemmFusionKind = "__cutlass_gemm";
+
 class GemmRewriterVisitor : public DfsHloRewriteVisitor {
  public:
   explicit GemmRewriterVisitor(const se::GpuComputeCapability &gpu_version)
@@ -483,6 +502,65 @@ class GemmRewriterVisitor : public DfsHloRewriteVisitor {
       return absl::OkStatus();
     }
 
+    if (instr->user_count() ==1 && instr->users()[0]->opcode() == HloOpcode::kAdd) {
+
+      HloInstruction* add = instr->users()[0];
+
+      std::string fusion_name = absl::StrCat("cutlass_gemm_", instr->name());
+      HloComputation::Builder builder(absl::StrCat(fusion_name, "_computation"));
+
+      std::vector<HloInstruction *> fusion_inputs(instr->operands().begin(), instr->operands().end());
+
+      HloInstruction* param0 = builder.AddInstruction(HloInstruction::CreateParameter(0, instr->operand(0)->shape(), "lhs"));
+      HloInstruction* param1 = builder.AddInstruction(HloInstruction::CreateParameter(1, instr->operand(1)->shape(), "rhs"));
+
+      HloInstruction& fused_dot = FuseDot(*Cast<HloDotInstruction>(instr), *param0, *param1, builder);
+
+      HloInstruction::InstructionVector add_operands;
+      add_operands.push_back(const_cast<HloInstruction*>(&fused_dot));
+      HloInstruction *bcast = add->mutable_operand(1);
+      HloInstruction *operand = bcast->mutable_operand(0);
+      HloInstruction* param2 = builder.AddInstruction(HloInstruction::CreateParameter(2, operand->shape(), "bcast_"));
+      HloInstruction* fused_bcast = builder.AddInstruction(
+                bcast->CloneWithNewOperands(bcast->shape(), {param2}));
+      fusion_inputs.push_back(operand);
+      add_operands.push_back(fused_bcast);
+
+      HloInstruction* fused_user = builder.AddInstruction(
+                add->CloneWithNewOperands(add->shape(), add_operands));
+      if (builder.last_added_instruction() == nullptr) {
+        return OkStatus();
+      }
+
+      HloComputation* computation =
+            instr->GetModule()->AddComputationAndUnifyNamesAndIds(builder.Build(),
+                                                              /*is_entry=*/false);
+      HloInstruction* dot_fusion =
+          instr->parent()->AddInstruction(HloInstruction::CreateFusion(
+              computation->root_instruction()->shape(),
+              HloInstruction::FusionKind::kCustom, fusion_inputs, computation));
+      dot_fusion->GetModule()->SetAndUniquifyInstrName(dot_fusion, fusion_name);
+
+      TF_ASSIGN_OR_RETURN(auto backend_config,
+                          dot_fusion->backend_config<FusionBackendConfig>());
+      backend_config.set_kind(std::string(kCutlassGemmFusionKind));
+      TF_RETURN_IF_ERROR(dot_fusion->set_backend_config(backend_config));
+
+      TF_RETURN_IF_ERROR(ReplaceInstruction(add, dot_fusion));
+
+      //if (fusion_output->IsRoot()) {
+      //  fusion_output->parent()->set_root_instruction(dot_fusion);
+      //  TF_RETURN_IF_ERROR(
+      //      fusion_output->parent()->RemoveInstructionAndUnusedOperands(
+      //          fusion_output));
+      //  MarkAsChanged();
+      //} else {
+      //  TF_RETURN_IF_ERROR(ReplaceInstruction(fusion_output, dot_fusion));
+      //}
+
+      return OkStatus();
+    }
+    
     CHECK(!instr->IsRank2Transpose());
     CHECK(!instr->mutable_operand(0)->IsRank2Transpose());
     CHECK(!instr->mutable_operand(1)->IsRank2Transpose());

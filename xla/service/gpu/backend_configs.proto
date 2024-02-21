@@ -135,6 +135,10 @@ message CustomFusionConfig {
   string name = 1;
 }
 
+message CutlassGemmConfig {
+  string name = 1;
+}
+
 message FusionBackendConfig {
   // kLoop, kInput, or kOutput (from HloInstruction::FusionKind), or your own
   // custom string.
@@ -153,6 +157,9 @@ message FusionBackendConfig {
 
   // Only valid when kind == "__custom_fusion".
   CustomFusionConfig custom_fusion_config = 4;
+
+  // Only valid when kind == "__cutlass_gemm".
+  CutlassGemmConfig cutlass_gemm_config = 5;
 
   // Cost model prediction.
   ReificationCost reification_cost = 3;
